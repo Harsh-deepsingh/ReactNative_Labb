@@ -8,7 +8,9 @@ export default function ItemList(){
 return(
     <div>
         <ul>
-            <ImageProp source={items.map} />
+        {items.map((item) => 
+            <ImageProp source = {item} />
+        )}
         </ul>
     </div>
       )
