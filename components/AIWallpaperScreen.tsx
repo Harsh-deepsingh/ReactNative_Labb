@@ -1,26 +1,63 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ActivityIndicator } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
-import Icon from 'react-native-vector-icons/Feather';
-import { theme } from './theme';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  ActivityIndicator,
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { BlurView } from "expo-blur";
+import Icon from "react-native-vector-icons/Feather";
+import { theme } from "./theme";
 
 const AIWallpaperScreen: React.FC = () => {
-  const [prompt, setPrompt] = useState<string>('');
+  const [prompt, setPrompt] = useState<string>("");
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const handleGenerate = () => {
-    setIsLoading(true);
-    // Simulating image generation
-    setTimeout(() => {
-      setGeneratedImage('https://images.pexels.com/photos/3052361/pexels-photo-3052361.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2');
-      setIsLoading(false);
-    }, 2000);
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const handleGenerate = async () => {
+    if (!prompt) {
+      alert("Please enter a prompt!");
+      return;
+    }
+
+    setLoading(true);
+    setImageUrl(null);
+
+    //for Using a website http://localhost:5000/generate-image
+    //for Using a android emulator http://10.0.2.2:5000/generate-image
+    //Why? 5000 becuase my port is listening to 5 thousand
+    try {
+      const response = await fetch("http://localhost:5000/generate-image", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ prompt }),
+      });
+
+      const data = await response.json();
+      if (data.imageUrl) {
+        setImageUrl(data.imageUrl);
+      } else {
+        alert("Failed to generate image.");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("An error occurred while generating the image.");
+    }
+
+    setLoading(false);
   };
 
   return (
-    <LinearGradient colors={['#1A1A1A', '#0A0A0A']} style={styles.container}>
+    <LinearGradient colors={["#1A1A1A", "#0A0A0A"]} style={styles.container}>
       <BlurView intensity={20} style={styles.blurContainer}>
         <Text style={styles.title}>AI Wallpaper Generator</Text>
         <LinearGradient
@@ -38,7 +75,10 @@ const AIWallpaperScreen: React.FC = () => {
               onChangeText={setPrompt}
               multiline
             />
-            <TouchableOpacity style={styles.generateButton} onPress={handleGenerate}>
+            <TouchableOpacity
+              style={styles.generateButton}
+              onPress={handleGenerate}
+            >
               <Icon name="zap" size={24} color={theme.colors.background} />
             </TouchableOpacity>
           </View>
@@ -48,9 +88,9 @@ const AIWallpaperScreen: React.FC = () => {
             <ActivityIndicator size="large" color={theme.colors.primary} />
             <Text style={styles.loadingText}>Creating your masterpiece...</Text>
           </View>
-        ) : generatedImage ? (
+        ) : imageUrl ? (
           <View style={styles.imageContainer}>
-            <Image source={{ uri: generatedImage }} style={styles.generatedImage} />
+            <Image source={{ uri: imageUrl }} style={styles.generatedImage} />
             <View style={styles.actionButtons}>
               <TouchableOpacity style={styles.actionButton}>
                 <Icon name="download" size={24} color={theme.colors.primary} />
@@ -63,7 +103,9 @@ const AIWallpaperScreen: React.FC = () => {
         ) : (
           <View style={styles.placeholderContainer}>
             <Icon name="image" size={80} color={theme.colors.textSecondary} />
-            <Text style={styles.placeholderText}>Your AI-generated wallpaper will appear here</Text>
+            <Text style={styles.placeholderText}>
+              Your AI-generated wallpaper will appear here
+            </Text>
           </View>
         )}
       </BlurView>
@@ -84,10 +126,10 @@ const styles = StyleSheet.create({
     fontFamily: theme.fonts.bold,
     color: theme.colors.primary,
     marginBottom: theme.spacing.l,
-    textAlign: 'center',
+    textAlign: "center",
   },
   inputContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginBottom: theme.spacing.l,
     backgroundColor: theme.colors.surface,
     borderRadius: theme.borderRadius.m,
@@ -99,22 +141,22 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
     fontFamily: theme.fonts.regular,
     fontSize: 16,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   generateButton: {
     width: 60,
     height: 60,
     backgroundColor: theme.colors.primary,
     borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginLeft: theme.spacing.m,
-    alignSelf: 'flex-end',
+    alignSelf: "flex-end",
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   loadingText: {
     marginTop: theme.spacing.m,
@@ -124,16 +166,16 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
   },
   generatedImage: {
-    width: '100%',
-    height: '80%',
+    width: "100%",
+    height: "80%",
     borderRadius: theme.borderRadius.m,
   },
   actionButtons: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     marginTop: theme.spacing.m,
   },
   actionButton: {
@@ -141,21 +183,21 @@ const styles = StyleSheet.create({
     height: 60,
     backgroundColor: theme.colors.surface,
     borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginHorizontal: theme.spacing.s,
   },
   placeholderContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   placeholderText: {
     marginTop: theme.spacing.m,
     fontSize: 18,
     fontFamily: theme.fonts.medium,
     color: theme.colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
   inputGradientBorder: {
     padding: 2,
@@ -164,4 +206,3 @@ const styles = StyleSheet.create({
 });
 
 export default AIWallpaperScreen;
-
